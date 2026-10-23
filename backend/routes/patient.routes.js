@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { patientController } from '../controllers/patient.controller.js';
+import { timelineController } from '../controllers/timeline.controller.js';
+import { continuityController } from '../controllers/continuity.controller.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 import { ROLES } from '../models/User.js';
 
@@ -38,6 +40,20 @@ router.post(
   '/',
   authorize(ROLES.ADMIN, ROLES.DOCTOR, ROLES.NGO),
   patientController.createPatient
+);
+
+// Care Timeline - must be before /:id to avoid conflicts
+router.get(
+  '/:id/timeline',
+  authorize(ROLES.PATIENT, ROLES.DOCTOR, ROLES.ADMIN),
+  timelineController.getTimeline
+);
+
+// Care Continuity - must be before /:id to avoid conflicts
+router.get(
+  '/:id/continuity',
+  authorize(ROLES.PATIENT, ROLES.DOCTOR, ROLES.ADMIN),
+  continuityController.getContinuityInsights
 );
 
 router.get(

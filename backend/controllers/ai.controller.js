@@ -42,7 +42,7 @@ import {
 import { AgentRun, Appointment, WorkflowPlan } from '../models/index.js';
 import mongoose from 'mongoose';
 import { getActiveWorkflowPlan } from '../services/ai/workflowPlanner.js';
-import { executeWorkflowStep } from '../services/ai/workflowExecutor.js';
+import { snapshotMatches, formatDateTime } from '../services/ai/utils.js';
 
 const MAX_MESSAGE = 2000;
 const MAX_HISTORY = 10;
@@ -61,23 +61,13 @@ const snapshotOf = (a) => ({
   startTime: a.startTime || '',
 });
 
-export const snapshotMatches = (proposal, appointment) => {
-  const snap = proposal.snapshot || {};
-  const current = snapshotOf(appointment);
-  return (
-    (snap.status || '') === current.status &&
-    String(snap.date ? new Date(snap.date).toISOString() : '') === current.date &&
-    (snap.startTime || '') === current.startTime
-  );
-};
-
 /**
  * POST /ai/chat
  * Body: { message: string (1..2000), history?: [{ from, text }] (<=10) }
  * Returns { data: { intent, entities, message, toolCalls, actions,
  *   requiresConfirmation, requestId, provider, workflowPlan? } }.
  */
-export const chat = asyncHandler(async (req, res) => {
+const chat = asyncHandler(async (req, res) => {
   const message = String(req.body?.message || '');
   if (!message.trim() || message.length > MAX_MESSAGE) {
     throw new ApiError(400, 'Message must be 1..2000 characters.');
@@ -115,6 +105,7 @@ export const chat = asyncHandler(async (req, res) => {
     classification.entities = sanitizeEntities(classification.entities);
 
     try {
+      const { executeWorkflowStep } = await import('../services/ai/workflowExecutor.js');
       const plan = await executeWorkflowStep({
         plan: activePlan,
         user: req.user,
@@ -245,7 +236,7 @@ const replayResult = async (proposal) => {
  * Atomic single-winner consume; replay returns the recorded outcome.
  * Ownership, snapshot and availability are revalidated before any write.
  */
-export const confirm = asyncHandler(async (req, res) => {
+const confirm = asyncHandler(async (req, res) => {
   const proposalId = String(req.body?.proposalId || '');
   if (!proposalId || proposalId.length > 64) {
     throw new ApiError(400, 'A valid proposalId is required.');
@@ -398,7 +389,7 @@ const confirmCancel = async (req, proposal) => {
 };
 
 /** GET /ai/proposal/:id — read-only re-check of a pending draft. */
-export const peek = asyncHandler(async (req, res) => {
+const peek = asyncHandler(async (req, res) => {
   const proposal = await peekProposal(String(req.params.id || ''), String(req.user._id));
   if (!proposal) throw new ApiError(404, 'No pending booking proposal found for this session.');
   return success(res, {
@@ -412,7 +403,7 @@ export const peek = asyncHandler(async (req, res) => {
 });
 
 /** GET /ai/workflow/:id — read-only re-check of an active workflow plan. */
-export const getWorkflowPlan = asyncHandler(async (req, res) => {
+const getWorkflowPlan = asyncHandler(async (req, res) => {
   const plan = await WorkflowPlan.findOne({ planId: String(req.params.id || ''), user: req.user._id }).lean();
   if (!plan) throw new ApiError(404, 'No active workflow plan found for this session.');
   return success(res, {
@@ -438,7 +429,7 @@ export const getWorkflowPlan = asyncHandler(async (req, res) => {
 });
 
 /** POST /ai/workflow/cancel — cancel the active workflow plan. */
-export const cancelWorkflow = asyncHandler(async (req, res) => {
+const cancelWorkflow = asyncHandler(async (req, res) => {
   const plan = await WorkflowPlan.findOne({ user: req.user._id, status: { $in: ['planned', 'awaiting_input', 'awaiting_confirmation', 'running'] } });
   if (!plan) throw new ApiError(404, 'No active workflow plan to cancel.');
   if (['completed', 'failed', 'cancelled'].includes(plan.status)) {
@@ -472,7 +463,7 @@ const paginate = (page, limit) => {
 };
 
 /** GET /ai/runs — caller's own runs, newest first. */
-export const listMyRuns = asyncHandler(async (req, res) => {
+const listMyRuns = asyncHandler(async (req, res) => {
   const { pageNum, limitNum, skip } = paginate(req.query.page, req.query.limit);
   const query = { actor: req.user._id };
   if (req.query.status) query.status = String(req.query.status);
@@ -489,7 +480,7 @@ export const listMyRuns = asyncHandler(async (req, res) => {
 });
 
 /** GET /ai/runs/:id — own run, or any run for admins. */
-export const getRun = asyncHandler(async (req, res) => {
+const getRun = asyncHandler(async (req, res) => {
   const run = await AgentRun.findOne({ requestId: String(req.params.id || '') }).lean();
   if (!run) throw new ApiError(404, 'Agent run not found.');
   const isOwner = String(run.actor) === String(req.user._id);
@@ -500,7 +491,7 @@ export const getRun = asyncHandler(async (req, res) => {
 });
 
 /** GET /ai/admin/runs — paginated runs with status/date filters (admin only). */
-export const listAllRuns = asyncHandler(async (req, res) => {
+const listAllRuns = asyncHandler(async (req, res) => {
   const { pageNum, limitNum, skip } = paginate(req.query.page, req.query.limit);
   const query = {};
   if (req.query.status) query.status = String(req.query.status);
@@ -538,7 +529,7 @@ export const listAllRuns = asyncHandler(async (req, res) => {
  * Reports configuration STATUS, never secret values: provider name (not the
  * key), database connectivity, rate-limit scope, and retention windows.
  */
-export const status = asyncHandler(async (_req, res) => {
+const status = asyncHandler(async (_req, res) => {
   const provider = getProvider();
   return success(res, {
     chatEnabled: true,
@@ -551,5 +542,7 @@ export const status = asyncHandler(async (_req, res) => {
   });
 });
 
-export const aiController = { chat, confirm, peek, listMyRuns, getRun, listAllRuns, snapshotMatches, status };
+const aiController = { chat, confirm, peek, getWorkflowPlan, cancelWorkflow, status, listMyRuns, getRun, listAllRuns };
+
+export { chat, confirm, peek, getWorkflowPlan, cancelWorkflow, status, listMyRuns, getRun, listAllRuns };
 export default aiController;

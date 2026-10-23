@@ -28,6 +28,7 @@ import {
 } from './agentRuns.js';
 import { orchestrate } from './orchestrator.js';
 import { INTENTS } from './intent.js';
+import { snapshotMatches } from './utils.js';
 
 export const executeWorkflowStep = async ({ plan, user, message = '' }) => {
   if (!plan) throw new ApiError(400, 'No workflow plan provided.');
@@ -493,7 +494,6 @@ const confirmReschedule = async ({ user, proposal }) => {
 
   await resolveModifiableAppointment(user, { appointmentId: String(appointment._id) });
 
-  const { snapshotMatches } = await import('../controllers/ai.controller.js');
   if (!snapshotMatches(proposal, appointment)) {
     throw new ApiError(409, 'The appointment changed since this proposal was prepared. Please start again.');
   }
@@ -519,7 +519,6 @@ const confirmCancel = async ({ user, proposal }) => {
 
   await resolveModifiableAppointment(user, { appointmentId: String(appointment._id) });
 
-  const { snapshotMatches } = await import('../controllers/ai.controller.js');
   if (!snapshotMatches(proposal, appointment)) {
     throw new ApiError(409, 'The appointment changed since this proposal was prepared. Please start again.');
   }
