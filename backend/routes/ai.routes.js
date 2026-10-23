@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { body, query } from 'express-validator';
-import { aiController } from '../controllers/ai.controller.js';
+import { chat, confirm, peek, getWorkflowPlan, cancelWorkflow, status, listMyRuns, getRun, listAllRuns } from '../controllers/ai.controller.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 import { ROLES } from '../models/User.js';
 import { aiChatLimiter, aiConfirmLimiter } from '../middleware/rateLimit.js';
@@ -18,7 +18,7 @@ router.post(
     body('history').optional().isArray({ max: 10 }),
   ],
   validate,
-  aiController.chat
+  chat
 );
 
 router.post(
@@ -26,15 +26,15 @@ router.post(
   aiConfirmLimiter,
   [body('proposalId').isString().isLength({ min: 1, max: 64 })],
   validate,
-  aiController.confirm
+  confirm
 );
 
-router.get('/proposal/:id', aiChatLimiter, aiController.peek);
+router.get('/proposal/:id', aiChatLimiter, peek);
 
-router.get('/workflow/:id', aiChatLimiter, aiController.getWorkflowPlan);
-router.post('/workflow/cancel', aiChatLimiter, aiController.cancelWorkflow);
+router.get('/workflow/:id', aiChatLimiter, getWorkflowPlan);
+router.post('/workflow/cancel', aiChatLimiter, cancelWorkflow);
 
-router.get('/status', aiController.status);
+router.get('/status', status);
 
 router.get(
   '/runs',
@@ -45,10 +45,10 @@ router.get(
     query('intent').optional().isString(),
   ],
   validate,
-  aiController.listMyRuns
+  listMyRuns
 );
 
-router.get('/runs/:id', aiController.getRun);
+router.get('/runs/:id', getRun);
 
 router.get(
   '/admin/runs',
@@ -62,7 +62,7 @@ router.get(
     query('to').optional().isISO8601(),
   ],
   validate,
-  aiController.listAllRuns
+  listAllRuns
 );
 
 export default router;

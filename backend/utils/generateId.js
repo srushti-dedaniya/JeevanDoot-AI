@@ -28,5 +28,7 @@ export const generateCampId = () => generateId('HC-');
 export const generateConsultationId = () => generateId('SESS-');
 export const generateProposalId = () => generateId('PAP-', 12);
 export const generateWorkflowPlanId = () => generateId('WFP-', 12);
+export const generateReminderId = () => generateId('RMD-', 12);
+export const generateEscalationId = () => generateId('ESC-', 12);
 
 export default generateId;

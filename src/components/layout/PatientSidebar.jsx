@@ -12,6 +12,7 @@ const PATIENT_MENU = [
   { labelKey: 'consultationHistory', to: '/patient/consultation-history', icon: 'history' },
   { labelKey: 'reports', to: '/patient/reports', icon: 'description' },
   { labelKey: 'healthMonitoring', to: '/patient/monitoring', icon: 'monitor_heart' },
+  { labelKey: 'careTimeline', to: '/patient/timeline', icon: 'timeline' },
   { labelKey: 'aiAssistant', to: '/patient/ai-assistant', icon: 'smart_toy' },
   { labelKey: 'notifications', to: '/patient/notifications', icon: 'notifications' },
   { labelKey: 'profile', to: '/patient/profile', icon: 'person' },

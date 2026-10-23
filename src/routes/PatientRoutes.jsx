@@ -8,6 +8,7 @@ import ConsultationHistory from '../pages/patient/ConsultationHistory';
 import Reports from '../pages/patient/Reports';
 import HealthMonitoring from '../pages/patient/HealthMonitoring';
 import Notifications from '../pages/patient/Notifications';
+import CareTimeline from '../pages/patient/CareTimeline';
 import AiTaskAgent from '../pages/ai/AiTaskAgent';
 import Profile from '../pages/patient/Profile';
 import Settings from '../pages/patient/Settings';
@@ -25,6 +26,7 @@ export default function PatientRoutes() {
       <Route path="reports" element={<Reports />} />
       <Route path="monitoring" element={<HealthMonitoring />} />
       <Route path="notifications" element={<Notifications />} />
+      <Route path="timeline" element={<CareTimeline />} />
       <Route path="profile" element={<Profile />} />
       <Route path="ai-assistant" element={<AiTaskAgent />} />
       <Route path="settings" element={<Settings />} />

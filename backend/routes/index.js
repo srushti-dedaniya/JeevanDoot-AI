@@ -12,6 +12,8 @@ import reportRoutes from './report.routes.js';
 import notificationRoutes from './notification.routes.js';
 import referralRoutes from './referral.routes.js';
 import aiRoutes from './ai.routes.js';
+import reminderRoutes from './reminder.routes.js';
+import escalationRoutes from './escalation.routes.js';
 
 const router = Router();
 
@@ -29,6 +31,8 @@ const apiRoutes = [
   { path: '/reports', router: reportRoutes },
   { path: '/notifications', router: notificationRoutes },
   { path: '/referrals', router: referralRoutes },
+  { path: '/reminders', router: reminderRoutes },
+  { path: '/escalations', router: escalationRoutes },
   { path: '/ai', router: aiRoutes },
 ];
 

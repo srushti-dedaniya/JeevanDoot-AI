@@ -24,7 +24,7 @@ import {
   transitionRun,
   appendRunEvent,
 } from '../services/ai/agentRuns.js';
-import { snapshotMatches } from '../controllers/ai.controller.js';
+import { snapshotMatches } from '../services/ai/utils.js';
 import { AgentProposal, AgentRun } from '../models/index.js';
 
 const URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/jeevandoot_ai_test';
